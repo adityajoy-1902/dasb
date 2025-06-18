@@ -1,0 +1,8 @@
+com/example/dashboard/controller/DashboardController.class
+com/example/dashboard/model/Service.class
+com/example/dashboard/model/Server.class
+com/example/dashboard/model/ApplicationList.class
+com/example/dashboard/model/Application.class
+com/example/dashboard/service/YamlParserService.class
+com/example/dashboard/model/Environment.class
+com/example/dashboard/DashboardApplication.class
