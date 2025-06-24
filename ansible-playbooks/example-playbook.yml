@@ -1,0 +1,62 @@
+---
+- name: Example Server Status Check
+  hosts: servers
+  gather_facts: yes
+  tasks:
+    - name: Check if Tomcat is running
+      shell: ps aux | grep tomcat | grep -v grep
+      register: tomcat_process
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Get Tomcat version
+      shell: find /opt -name 'catalina.sh' -exec {} version \; 2>/dev/null | head -1
+      register: tomcat_version
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Check Tomcat ports
+      shell: netstat -tlnp | grep java | grep -E ':(8080|8443|8005)'
+      register: tomcat_ports
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Get Tomcat memory usage
+      shell: ps aux | grep tomcat | grep -v grep | awk '{print $6}' | head -1
+      register: tomcat_memory
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Check if JBoss is running
+      shell: ps aux | grep jboss | grep -v grep
+      register: jboss_process
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Get JBoss version
+      shell: find /opt -name 'standalone.sh' -exec dirname {} \; | xargs -I {} find {} -name 'jboss-modules.jar' -exec java -jar {} --version \; 2>/dev/null
+      register: jboss_version
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Check JBoss ports
+      shell: netstat -tlnp | grep java | grep -E ':(8080|8443|9990|9999)'
+      register: jboss_ports
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Get JBoss memory usage
+      shell: ps aux | grep jboss | grep -v grep | awk '{print $6}' | head -1
+      register: jboss_memory
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display results
+      debug:
+        msg: |
+          Tomcat Status: {{ 'RUNNING' if tomcat_process.stdout_lines else 'STOPPED' }}
+          Tomcat Version: {{ tomcat_version.stdout | default('Unknown') }}
+          Tomcat Memory: {{ tomcat_memory.stdout | default('Unknown') }} KB
+          JBoss Status: {{ 'RUNNING' if jboss_process.stdout_lines else 'STOPPED' }}
+          JBoss Version: {{ jboss_version.stdout | default('Unknown') }}
+          JBoss Memory: {{ jboss_memory.stdout | default('Unknown') }} KB 

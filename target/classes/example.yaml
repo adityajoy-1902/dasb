@@ -4,18 +4,8 @@ applications:
       - name: production
         servers:
           - name: server1
-            ip: 332.10.1.1
+            ip: 34.131.147.204
             os: Linux
-            services:
-              - name: iis
-                type: app
-                cmd: "iisreset /force"
-              - name: MyApp
-                type: app
-                cmd: "start MyApp.exe"
-          - name: server2
-            ip: 332.10.1.2
-            os: Windows
             services:
               - name: tomcat
                 type: app
