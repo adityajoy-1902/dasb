@@ -301,25 +301,35 @@ public class AnsibleService {
     private ServerStatus.ServiceStatus parseTomcatStatus(String result, ServerStatus.ServiceStatus.ServiceStatusBuilder builder) {
         builder.serviceName("Tomcat");
 
-        // Check if Tomcat process is running (improved detection for Tomcat 10)
+        // Check if Tomcat process is running (more precise detection)
         boolean tomcatRunning = false;
         
-        // Check for tomcat user processes (specific to this server)
-        if (result.contains("tomcat_process") && !result.contains("tomcat_process.stdout_lines: []")) {
-            // Look for tomcat user processes
-            if (result.contains("tomcat") && result.contains("java")) {
+        // Primary check: Look for actual running tomcat processes
+        if (result.contains("tomcat_process")) {
+            // Check for actual tomcat user processes with java and catalina
+            if (result.contains("tomcat") && result.contains("java") && result.contains("catalina") && result.contains("Bootstrap start")) {
+                tomcatRunning = true;
+            }
+            // Check for the specific process pattern we saw in the output
+            if (result.contains("tomcat") && result.contains("java") && result.contains("catalina.base=/var/lib/tomcat10")) {
                 tomcatRunning = true;
             }
         }
         
-        // Also check for java processes that might be Tomcat
-        if (!tomcatRunning && result.contains("java") && result.contains("catalina")) {
-            tomcatRunning = true;
+        // Secondary check: Look for listening ports (only if we found a process)
+        if (tomcatRunning && result.contains("tomcat_ports")) {
+            // Verify that ports are actually listening
+            if (result.contains("8080") && result.contains("LISTEN") && result.contains("java")) {
+                // Port is confirmed listening
+            } else {
+                // Process found but no listening ports - might be starting up
+                tomcatRunning = false;
+            }
         }
         
-        // Check for specific Tomcat 10 installation paths
-        if (!tomcatRunning && (result.contains("/usr/share/tomcat10") || result.contains("/var/lib/tomcat10"))) {
-            tomcatRunning = true;
+        // If no process found, definitely not running
+        if (!result.contains("tomcat_process") || result.contains("tomcat_process.stdout_lines: []")) {
+            tomcatRunning = false;
         }
 
         if (tomcatRunning) {
@@ -348,14 +358,14 @@ public class AnsibleService {
             }
 
             // Extract memory usage (improved parsing)
-            Pattern memoryPattern = Pattern.compile("Memory:\\s*(\\d+)");
+            Pattern memoryPattern = Pattern.compile("tomcat_memory.stdout:\\s*(\\d+)");
             Matcher memoryMatcher = memoryPattern.matcher(result);
             if (memoryMatcher.find()) {
                 long memoryKB = Long.parseLong(memoryMatcher.group(1));
                 builder.memoryUsage(formatMemoryUsage(memoryKB));
             } else {
                 // Try alternative memory pattern
-                Pattern altMemoryPattern = Pattern.compile("tomcat_memory.stdout:\\s*(\\d+)");
+                Pattern altMemoryPattern = Pattern.compile("Memory:\\s*(\\d+)");
                 Matcher altMemoryMatcher = altMemoryPattern.matcher(result);
                 if (altMemoryMatcher.find()) {
                     long memoryKB = Long.parseLong(altMemoryMatcher.group(1));
@@ -364,7 +374,7 @@ public class AnsibleService {
             }
 
             // Extract port information (expanded for Tomcat 10)
-            if (result.contains("tomcat_ports")) {
+            if (result.contains("tomcat_ports") && result.contains("8080")) {
                 builder.port("8080, 8443, 8005, 8009, 8006");
             }
 

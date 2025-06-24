@@ -3,54 +3,6 @@
   hosts: servers
   gather_facts: yes
   tasks:
-    - name: Check if Tomcat is running
-      shell: ps aux | grep -E '(tomcat|catalina)' | grep -v grep
-      register: tomcat_process
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Get Tomcat version (multiple paths)
-      shell: |
-        if [ -f /opt/tomcat/bin/version.sh ]; then
-          /opt/tomcat/bin/version.sh
-        elif [ -f /usr/share/tomcat*/bin/version.sh ]; then
-          /usr/share/tomcat*/bin/version.sh
-        elif [ -f /data/tomcat/bin/version.sh ]; then
-          /data/tomcat/bin/version.sh
-        elif [ -f /usr/local/tomcat/bin/version.sh ]; then
-          /usr/local/tomcat/bin/version.sh
-        elif [ -f /opt/apache-tomcat*/bin/version.sh ]; then
-          /opt/apache-tomcat*/bin/version.sh
-        else
-          find /opt -name 'catalina.sh' -exec {} version \; 2>/dev/null | head -1
-        fi
-      register: tomcat_version
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Check Tomcat ports (multiple ranges)
-      shell: netstat -tlnp | grep java | grep -E ':(8080|8443|8005|8009|8006)'
-      register: tomcat_ports
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Get Tomcat memory usage
-      shell: ps aux | grep -E '(tomcat|catalina)' | grep -v grep | awk '{print $6}' | head -1
-      register: tomcat_memory
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Check Tomcat installation directories
-      shell: |
-        echo 'Checking common Tomcat paths:'
-        ls -la /opt/ | grep -i tomcat || echo 'No tomcat in /opt/'
-        ls -la /usr/share/ | grep -i tomcat || echo 'No tomcat in /usr/share/'
-        ls -la /data/ | grep -i tomcat || echo 'No tomcat in /data/'
-        ls -la /usr/local/ | grep -i tomcat || echo 'No tomcat in /usr/local/'
-      register: tomcat_paths
-      ignore_errors: yes
-      changed_when: false
-
     - name: Check if JBoss is running
       shell: ps aux | grep jboss | grep -v grep
       register: jboss_process

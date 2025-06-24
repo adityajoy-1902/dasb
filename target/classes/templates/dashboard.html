@@ -1,91 +1,557 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Application Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Server Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        .tab-content {
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .header-section h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header-section p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .check-all-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .check-all-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .check-all-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .server-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .server-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .server-header {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .server-info h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .server-info p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #00b894;
+            box-shadow: 0 0 10px rgba(0, 184, 148, 0.5);
+        }
+        
+        .status-offline {
+            background: #e17055;
+            box-shadow: 0 0 10px rgba(225, 112, 85, 0.5);
+        }
+        
+        .status-checking {
+            background: #fdcb6e;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .service-section {
             padding: 20px;
         }
-        .nav-tabs {
+        
+        .service-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #74b9ff;
+        }
+        
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .service-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .service-type {
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .service-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .service-details {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .service-details h6 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .detail-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .check-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
             margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            color: white;
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+        
+        .no-servers {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .no-servers i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Application Dashboard</h1>
-        
-        <ul class="nav nav-tabs" id="appTabs" role="tablist">
-            <li class="nav-item" th:each="app, appStat : ${applications}">
-                <a class="nav-link" th:classappend="${appStat.first} ? 'active'" 
-                   th:id="'app-' + ${appStat.index} + '-tab'"
-                   data-bs-toggle="tab" 
-                   th:data-bs-target="'#app-' + ${appStat.index}"
-                   role="tab" 
-                   th:text="${app.name}">
-                </a>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="appTabContent">
-            <div class="tab-pane fade" th:each="app, appStat : ${applications}"
-                 th:classappend="${appStat.first} ? 'show active'"
-                 th:id="'app-' + ${appStat.index}"
-                 role="tabpanel">
-                
-                <div class="card mb-4" th:each="env : ${app.environments}">
-                    <div class="card-header">
-                        <h4 th:text="${env.name + ' Environment'}"></h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Server Name</th>
-                                        <th>IP Address</th>
-                                        <th>OS</th>
-                                        <th>Services</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="server : ${env.servers}">
-                                        <td th:text="${server.name}"></td>
-                                        <td th:text="${server.ip}"></td>
-                                        <td th:text="${server.os}"></td>
-                                        <td>
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Type</th>
-                                                        <th>Command/Script</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr th:each="service : ${server.services}">
-                                                        <td th:text="${service.name}"></td>
-                                                        <td th:text="${service.type}"></td>
-                                                        <td>
-                                                            <span th:if="${service.cmd}" th:text="${service.cmd}"></span>
-                                                            <span th:if="${service.startscript}" th:text="${service.startscript}"></span>
-                                                            <span th:if="${service.dbtype}" th:text="${service.dbtype + ' - ' + service.tnsalias}"></span>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+    <div class="container-fluid">
+        <div class="dashboard-container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1><i class="fas fa-server"></i> Server Monitoring Dashboard</h1>
+                <p>Monitor your server services in real-time with Ansible integration</p>
+            </div>
+            
+            <!-- Check All Section -->
+            <div class="check-all-section">
+                <h4><i class="fas fa-sync-alt"></i> Quick Status Check</h4>
+                <p>Check the status of all servers and services at once</p>
+                <button id="checkAllBtn" class="check-all-btn" onclick="checkAllServers()">
+                    <i class="fas fa-play"></i> Check All Services
+                </button>
+            </div>
+            
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+            
+            <!-- Servers Section -->
+            <div id="serversContainer">
+                <!-- Server cards will be dynamically generated here -->
+            </div>
+            
+            <!-- No Servers Message -->
+            <div id="noServersMessage" class="no-servers" style="display: none;">
+                <i class="fas fa-server"></i>
+                <h4>No Servers Configured</h4>
+                <p>Add servers to your configuration to start monitoring</p>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample server configuration - replace with your actual servers
+        const servers = [
+            {
+                name: "web-server",
+                ipAddress: "34.131.147.204",
+                username: "aditya",
+                password: "aditya123",
+                services: ["TOMCAT", "JBOSS"]
+            }
+            // Add more servers here as needed
+        ];
+        
+        let isChecking = false;
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            renderServers();
+        });
+        
+        function renderServers() {
+            const container = document.getElementById('serversContainer');
+            const noServersMessage = document.getElementById('noServersMessage');
+            
+            if (servers.length === 0) {
+                container.style.display = 'none';
+                noServersMessage.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'block';
+            noServersMessage.style.display = 'none';
+            
+            container.innerHTML = servers.map((server, index) => `
+                <div class="server-card">
+                    <div class="server-header">
+                        <div class="server-info">
+                            <h4><i class="fas fa-server"></i> ${server.name}</h4>
+                            <p><i class="fas fa-network-wired"></i> ${server.ipAddress}</p>
+                        </div>
+                        <div class="server-status">
+                            <span class="status-indicator status-offline" id="server-status-${index}"></span>
+                            <span id="server-status-text-${index}">Offline</span>
+                        </div>
+                    </div>
+                    <div class="service-section">
+                        <h5><i class="fas fa-cogs"></i> Services</h5>
+                        ${server.services.map(service => `
+                            <div class="service-item">
+                                <div class="service-header">
+                                    <div>
+                                        <span class="service-name">${service}</span>
+                                        <span class="service-type">${service}</span>
+                                    </div>
+                                    <button class="check-btn" onclick="checkService(${index}, '${service}')" id="btn-${index}-${service}">
+                                        <i class="fas fa-play"></i> Check
+                                    </button>
+                                </div>
+                                <div class="service-status">
+                                    <span class="status-indicator status-offline" id="service-status-${index}-${service}"></span>
+                                    <span id="service-status-text-${index}-${service}">Not Checked</span>
+                                </div>
+                                <div class="service-details" id="service-details-${index}-${service}" style="display: none;">
+                                    <h6><i class="fas fa-info-circle"></i> Service Details</h6>
+                                    <div id="service-details-content-${index}-${service}"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function checkService(serverIndex, serviceType) {
+            if (isChecking) return;
+            
+            const server = servers[serverIndex];
+            const btn = document.getElementById(`btn-${serverIndex}-${serviceType}`);
+            const statusIndicator = document.getElementById(`service-status-${serverIndex}-${serviceType}`);
+            const statusText = document.getElementById(`service-status-text-${serverIndex}-${serviceType}`);
+            const detailsDiv = document.getElementById(`service-details-${serverIndex}-${serviceType}`);
+            
+            // Update UI to checking state
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
+            statusIndicator.className = 'status-indicator status-checking';
+            statusText.textContent = 'Checking...';
+            detailsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/ansible/check-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        serverName: server.name,
+                        ipAddress: server.ipAddress,
+                        username: server.username,
+                        password: server.password,
+                        servicesToCheck: [serviceType],
+                        timeout: 60
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const service = result.services.find(s => s.serviceType === serviceType);
+                    if (service) {
+                        updateServiceStatus(serverIndex, serviceType, service);
+                        updateServerStatus(serverIndex, result.status);
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to check service');
+                }
+                
+            } catch (error) {
+                console.error('Error checking service:', error);
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Error: ' + error.message;
+                showAlert('Error checking service: ' + error.message, 'danger');
+            } finally {
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i> Check';
+            }
+        }
+        
+        async function checkAllServers() {
+            if (isChecking) return;
+            
+            isChecking = true;
+            const checkAllBtn = document.getElementById('checkAllBtn');
+            checkAllBtn.disabled = true;
+            checkAllBtn.innerHTML = '<span class="loading-spinner"></span> Checking All Services...';
+            
+            try {
+                showAlert('Starting comprehensive server status check...', 'info');
+                
+                for (let i = 0; i < servers.length; i++) {
+                    const server = servers[i];
+                    
+                    for (const service of server.services) {
+                        await checkService(i, service);
+                        // Small delay between checks
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                showAlert('All services have been checked successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error checking all servers:', error);
+                showAlert('Error during comprehensive check: ' + error.message, 'danger');
+            } finally {
+                isChecking = false;
+                checkAllBtn.disabled = false;
+                checkAllBtn.innerHTML = '<i class="fas fa-play"></i> Check All Services';
+            }
+        }
+        
+        function updateServiceStatus(serverIndex, serviceType, service) {
+            const statusIndicator = document.getElementById(`service-status-${serverIndex}-${serviceType}`);
+            const statusText = document.getElementById(`service-status-text-${serverIndex}-${serviceType}`);
+            const detailsDiv = document.getElementById(`service-details-${serverIndex}-${serviceType}`);
+            const detailsContent = document.getElementById(`service-details-content-${serverIndex}-${serviceType}`);
+            
+            // Update status indicator
+            if (service.status === 'RUNNING') {
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'Running';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Stopped';
+            }
+            
+            // Update details
+            detailsContent.innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">${service.status}</span>
+                </div>
+                ${service.version ? `
+                <div class="detail-row">
+                    <span class="detail-label">Version:</span>
+                    <span class="detail-value">${service.version}</span>
+                </div>
+                ` : ''}
+                ${service.memoryUsage ? `
+                <div class="detail-row">
+                    <span class="detail-label">Memory Usage:</span>
+                    <span class="detail-value">${service.memoryUsage}</span>
+                </div>
+                ` : ''}
+                ${service.port ? `
+                <div class="detail-row">
+                    <span class="detail-label">Ports:</span>
+                    <span class="detail-value">${service.port}</span>
+                </div>
+                ` : ''}
+                ${service.metrics ? `
+                <div class="detail-row">
+                    <span class="detail-label">Installation Path:</span>
+                    <span class="detail-value">${service.metrics.catalinaHome || 'N/A'}</span>
+                </div>
+                ` : ''}
+            `;
+            
+            detailsDiv.style.display = 'block';
+        }
+        
+        function updateServerStatus(serverIndex, status) {
+            const statusIndicator = document.getElementById(`server-status-${serverIndex}`);
+            const statusText = document.getElementById(`server-status-text-${serverIndex}`);
+            
+            if (status === 'ONLINE') {
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'Online';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Offline';
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" id="${alertId}" role="alert">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-remove alert after 5 seconds
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
 </body>
 </html> 
